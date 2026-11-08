@@ -1,0 +1,79 @@
+Smoke test — 2026-11-08
+Setup: 1 x server-v2 (t3.small, 100.23.100.251) -> RabbitMQ (t3.small) -> 1 x consumer (t3.small)
+Client: laptop (Windows), outside AWS, 64 main-phase threads, 50,000 swipes
+Command: java -jar target/client.jar http://$SERVER1:8080/ski-servlet 64 50000 smoke
+CSV: smoke-latency.csv, smoke-throughput.csv
+
+==================== Client output ====================
+Server: http://100.23.100.251:8080/ski-servlet, main phase threads: 64, total swipes: 50000, run label: smoke
+Single-thread avg RTT: 142.37 ms
+Little's Law prediction: warmup (32 threads) = 225 req/s, main (64 threads) = 450 req/s
+
+===== Ingest Path =====
+Successful swipes:   50000
+Failed swipes:       0
+Retries:             0
+Connection errors:   0
+Warmup:  32 threads, 224794 ms, 142 swipes/s
+Main:    64 threads, 92674 ms, 194 swipes/s
+Total wall time: 317468 ms
+Overall throughput: 157 swipes/s
+HTTP connections: 1 shared HttpClient for ingest (HTTP/1.1 keep-alive pool), 1 separate HttpClient for WebSockets
+
+===== Subscribe Path =====
+Resort  1: 56 updates, connect 259 ms, 0 reconnections
+Resort  2: 64 updates, connect 224 ms, 0 reconnections
+Resort  3: 56 updates, connect 153 ms, 0 reconnections
+Resort  4: 65 updates, connect 220 ms, 0 reconnections
+Resort  5: 69 updates, connect 243 ms, 0 reconnections
+Resort  6: 72 updates, connect 224 ms, 0 reconnections
+Resort  7: 60 updates, connect 213 ms, 0 reconnections
+Resort  8: 65 updates, connect 221 ms, 0 reconnections
+Resort  9: 69 updates, connect 154 ms, 0 reconnections
+Resort 10: 64 updates, connect 223 ms, 0 reconnections
+
+===== Last Leaderboard Received =====
+Resort  1: {"resortID":"1","dayID":"1","serverTimestamp":"2026-11-08T16:13:55.668002046Z","top":[{"rank":1,"skierID":"96119","vertical":791},{"rank":2,"skierID":"57640","vertical":773},{"rank":3,"skierID":"61292","vertical":739},{"rank":4,"skierID":"82903","vertical":730},{"rank":5,"skierID":"2230","vertical":713},{"rank":6,"skierID":"30818","vertical":696},{"rank":7,"skierID":"62172","vertical":678},{"rank":8,"skierID":"92688","vertical":669},{"rank":9,"skierID":"54631","vertical":652},{"rank":10,"skierID":"19198","vertical":634}]}
+Resort  2: {"resortID":"2","dayID":"1","serverTimestamp":"2026-11-08T16:14:03.989745949Z","top":[{"rank":1,"skierID":"13162","vertical":774},{"rank":2,"skierID":"67578","vertical":721},{"rank":3,"skierID":"2579","vertical":703},{"rank":4,"skierID":"50119","vertical":696},{"rank":5,"skierID":"22054","vertical":687},{"rank":6,"skierID":"16746","vertical":669},{"rank":7,"skierID":"46063","vertical":660},{"rank":8,"skierID":"95679","vertical":652},{"rank":9,"skierID":"44802","vertical":634},{"rank":10,"skierID":"60908","vertical":633}]}
+Resort  3: {"resortID":"3","dayID":"1","serverTimestamp":"2026-11-08T16:14:08.293360155Z","top":[{"rank":1,"skierID":"6504","vertical":774},{"rank":2,"skierID":"801","vertical":765},{"rank":3,"skierID":"38364","vertical":720},{"rank":4,"skierID":"55337","vertical":678},{"rank":5,"skierID":"9792","vertical":660},{"rank":6,"skierID":"20480","vertical":651},{"rank":7,"skierID":"18729","vertical":643},{"rank":8,"skierID":"28371","vertical":635},{"rank":9,"skierID":"26692","vertical":635},{"rank":10,"skierID":"7296","vertical":625}]}
+Resort  4: {"resortID":"4","dayID":"1","serverTimestamp":"2026-11-08T16:13:59.250944327Z","top":[{"rank":1,"skierID":"15251","vertical":747},{"rank":2,"skierID":"77373","vertical":746},{"rank":3,"skierID":"94517","vertical":739},{"rank":4,"skierID":"15947","vertical":720},{"rank":5,"skierID":"35187","vertical":704},{"rank":6,"skierID":"54770","vertical":696},{"rank":7,"skierID":"7552","vertical":695},{"rank":8,"skierID":"225","vertical":678},{"rank":9,"skierID":"92913","vertical":670},{"rank":10,"skierID":"46509","vertical":670}]}
+Resort  5: {"resortID":"5","dayID":"1","serverTimestamp":"2026-11-08T16:14:13.339067776Z","top":[{"rank":1,"skierID":"79019","vertical":817},{"rank":2,"skierID":"22248","vertical":765},{"rank":3,"skierID":"85926","vertical":722},{"rank":4,"skierID":"31626","vertical":713},{"rank":5,"skierID":"91830","vertical":712},{"rank":6,"skierID":"60435","vertical":704},{"rank":7,"skierID":"46321","vertical":696},{"rank":8,"skierID":"73992","vertical":678},{"rank":9,"skierID":"30846","vertical":678},{"rank":10,"skierID":"88342","vertical":669}]}
+Resort  6: {"resortID":"6","dayID":"1","serverTimestamp":"2026-11-08T16:14:13.688864663Z","top":[{"rank":1,"skierID":"89848","vertical":930},{"rank":2,"skierID":"95332","vertical":799},{"rank":3,"skierID":"59657","vertical":782},{"rank":4,"skierID":"25089","vertical":748},{"rank":5,"skierID":"93369","vertical":739},{"rank":6,"skierID":"33288","vertical":731},{"rank":7,"skierID":"98951","vertical":722},{"rank":8,"skierID":"46544","vertical":720},{"rank":9,"skierID":"96015","vertical":713},{"rank":10,"skierID":"91571","vertical":696}]}
+Resort  7: {"resortID":"7","dayID":"1","serverTimestamp":"2026-11-08T16:14:15.024124314Z","top":[{"rank":1,"skierID":"732","vertical":816},{"rank":2,"skierID":"52881","vertical":774},{"rank":3,"skierID":"17031","vertical":756},{"rank":4,"skierID":"79474","vertical":721},{"rank":5,"skierID":"66309","vertical":721},{"rank":6,"skierID":"31374","vertical":713},{"rank":7,"skierID":"75949","vertical":712},{"rank":8,"skierID":"10886","vertical":687},{"rank":9,"skierID":"77269","vertical":635},{"rank":10,"skierID":"53658","vertical":634}]}
+Resort  8: {"resortID":"8","dayID":"1","serverTimestamp":"2026-11-08T16:14:05.967530410Z","top":[{"rank":1,"skierID":"70324","vertical":748},{"rank":2,"skierID":"33506","vertical":748},{"rank":3,"skierID":"99827","vertical":704},{"rank":4,"skierID":"52267","vertical":695},{"rank":5,"skierID":"12874","vertical":687},{"rank":6,"skierID":"70708","vertical":678},{"rank":7,"skierID":"44023","vertical":678},{"rank":8,"skierID":"77785","vertical":670},{"rank":9,"skierID":"74141","vertical":660},{"rank":10,"skierID":"2214","vertical":652}]}
+Resort  9: {"resortID":"9","dayID":"1","serverTimestamp":"2026-11-08T16:14:05.317312727Z","top":[{"rank":1,"skierID":"57721","vertical":791},{"rank":2,"skierID":"73481","vertical":748},{"rank":3,"skierID":"96738","vertical":739},{"rank":4,"skierID":"20831","vertical":730},{"rank":5,"skierID":"79039","vertical":730},{"rank":6,"skierID":"2846","vertical":721},{"rank":7,"skierID":"69062","vertical":696},{"rank":8,"skierID":"2728","vertical":695},{"rank":9,"skierID":"31565","vertical":686},{"rank":10,"skierID":"59568","vertical":678}]}
+Resort 10: {"resortID":"10","dayID":"1","serverTimestamp":"2026-11-08T16:14:12.016035731Z","top":[{"rank":1,"skierID":"3805","vertical":982},{"rank":2,"skierID":"61693","vertical":756},{"rank":3,"skierID":"34955","vertical":730},{"rank":4,"skierID":"44049","vertical":730},{"rank":5,"skierID":"90978","vertical":687},{"rank":6,"skierID":"31348","vertical":687},{"rank":7,"skierID":"87338","vertical":678},{"rank":8,"skierID":"88746","vertical":678},{"rank":9,"skierID":"58721","vertical":678},{"rank":10,"skierID":"30260","vertical":661}]}
+
+===== Performance Analysis =====
+Ingest latency (n=50000): mean=259.81, median=250, p95=368, p99=475, min=74, max=1626 (ms)
+Throughput per resort:
+  Resort  1: 4988 swipes, 16 swipes/s
+  Resort  2: 4966 swipes, 16 swipes/s
+  Resort  3: 4991 swipes, 16 swipes/s
+  Resort  4: 4997 swipes, 16 swipes/s
+  Resort  5: 4961 swipes, 16 swipes/s
+  Resort  6: 4988 swipes, 16 swipes/s
+  Resort  7: 5002 swipes, 16 swipes/s
+  Resort  8: 4989 swipes, 16 swipes/s
+  Resort  9: 5100 swipes, 16 swipes/s
+  Resort 10: 5018 swipes, 16 swipes/s
+Push latency (n=640): mean=269.83, median=236, p95=378, p99=1696, min=175, max=3502 (ms)
+Total leaderboard updates delivered: 640
+Note: push latency includes clock skew between client and server clocks.
+
+CSV files written to D:\NEU\CS6650\Assignment\Assignment2\results
+
+==================== Consumer log (journalctl -u skitrak-consumer, excerpt at start of run) ====================
+Nov 08 16:08:37 ip-172-31-34-71.us-west-2.compute.internal java[8983]: processed=0 rate=0/s avgLag=0ms queueDepth=0 threads=2 duplicates=0
+Nov 08 16:08:42 ip-172-31-34-71.us-west-2.compute.internal java[8983]: processed=0 rate=0/s avgLag=0ms queueDepth=0 threads=2 duplicates=0
+Nov 08 16:08:47 ip-172-31-34-71.us-west-2.compute.internal java[8983]: processed=23 rate=5/s avgLag=4ms queueDepth=0 threads=2 duplicates=0
+Nov 08 16:08:52 ip-172-31-34-71.us-west-2.compute.internal java[8983]: processed=59 rate=7/s avgLag=2ms queueDepth=0 threads=2 duplicates=0
+
+==================== Observations ====================
+- Pipeline works end to end: 50,000/50,000 accepted, 0 failures, 0 retries, 0 WebSocket reconnections.
+- Subscribers receive real, swipe-driven standings: every resort's last board lists real skierIDs whose
+  totals are sums of lift verticals (e.g. 791 ft = several rides), 640 updates in total.
+- Consumer keeps up: avgLag 2-4 ms, queue depth 0, so the consumer side is not the bottleneck here.
+- Throughput (157 swipes/s) is bounded by the client, not the pipeline: single-thread RTT from the laptop
+  to us-west-2 is 142 ms, so 64 threads can do at most ~450 req/s by Little's Law. Performance runs must
+  use a client EC2 instance in the same region.

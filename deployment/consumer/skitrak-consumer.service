@@ -1,0 +1,19 @@
+# systemd unit for the consumer EC2 instance.
+# Install: sudo cp skitrak-consumer.service /etc/systemd/system/
+#          sudo systemctl daemon-reload && sudo systemctl enable --now skitrak-consumer
+# Logs:    journalctl -u skitrak-consumer -f
+[Unit]
+Description=SkiTrak swipe consumer
+After=network-online.target
+
+[Service]
+User=ec2-user
+WorkingDirectory=/home/ec2-user
+EnvironmentFile=/home/ec2-user/consumer.env
+ExecStart=/usr/bin/java -Xmx1200m -jar /home/ec2-user/consumer.jar
+# Auto-restart on crash or non-zero exit
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
