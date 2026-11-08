@@ -146,7 +146,7 @@ run ending 2026-11-08T18:20:08+0000: processed=500100 maxLag=57ms maxThreads=2 d
 | alb4-t512b | 500,000 | 500,100 | 57 ms | 0 |
 
 **Queue depth < 1,000.** The highest measured total depth (ready + unacked) was 265, in the 1M run (`queue_monitor.py`).
-The graphs show approx. 30–40 for single-500k and approx. 260 at most for the load-balanced runs (§4).
+The graphs show approx. 30–40 for single-500k and a peak of 265 (1M run, measured) for the load-balanced runs (§4).
 
 **No swipe loss.** In every segment, consumer processed = client successful swipes + 100. Before warmup, the client
 measures single-thread RTT by sending `LITTLES_LAW_SAMPLES = 100` real swipes (`Main.measureSingleThreadRtt`). The
@@ -214,7 +214,6 @@ So the broker CPU was 95–99% busy in the main phase. Main-phase excerpt:
 
 ```
  r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st
- 8  1      0 338764   2168 1151564    0    0     0 24822 20325 37971 58 29  6  8  0
  4  0      0 318252   2168 1151252    0    0     0 14946 18306 13015 72 23  5  0  0
  2  0      0 332280   2168 1131560    0    0     0 14468 17413 11587 76 22  2  0  0
  2  1      0 328744   2168 1126808    0    0     0 13946 17309 11240 78 21  1  0  0
@@ -329,5 +328,140 @@ changes the A1 API.
 
 - `deployment/consumer/skitrak-consumer.service`: `-Xmx2g` → `-Xmx1200m`. The consumer host (t3.small) has 2 GB of total RAM,
   so a 2 GB heap risked an OOM kill.
-- The client runs on a separate EC2 instance. The `results/` folder must be created on that instance before `tee`.
+- On the client instance, I created the results/ folder before the runs so that tee could write each run's output.
 - The consumer was restarted before each run so that aggregates and the dedupe set do not carry over between runs.
+
+## Appendix: Raw client output
+Copied from the client output files. The leaderboard JSON section is omitted (see §3).
+
+### single-500k (`results/single-500k-output.txt`)
+
+```
+===== Ingest Path =====
+Successful swipes:   500000
+Failed swipes:       0
+Retries:             0
+Connection errors:   0
+Warmup:  32 threads, 12183 ms, 2627 swipes/s
+Main:    256 threads, 88940 ms, 5262 swipes/s
+Total wall time: 101123 ms
+Overall throughput: 4944 swipes/s
+HTTP connections: 1 shared HttpClient for ingest (HTTP/1.1 keep-alive pool), 1 separate HttpClient for WebSockets
+
+===== Subscribe Path =====
+Resort  1: 135 updates, connect 38 ms, 0 reconnections
+Resort  2: 132 updates, connect 13 ms, 0 reconnections
+Resort  3: 137 updates, connect 49 ms, 0 reconnections
+Resort  4: 137 updates, connect 11 ms, 0 reconnections
+Resort  5: 131 updates, connect 8 ms, 0 reconnections
+Resort  6: 134 updates, connect 10 ms, 0 reconnections
+Resort  7: 138 updates, connect 11 ms, 0 reconnections
+Resort  8: 130 updates, connect 8 ms, 0 reconnections
+Resort  9: 140 updates, connect 8 ms, 0 reconnections
+Resort 10: 139 updates, connect 10 ms, 0 reconnections
+
+===== Performance Analysis =====
+Ingest latency (n=500000): mean=45.34, median=25, p95=137, p99=220, min=4, max=2234 (ms)
+Throughput per resort:
+  Resort  1: 49873 swipes, 493 swipes/s
+  Resort  2: 50037 swipes, 495 swipes/s
+  Resort  3: 49688 swipes, 491 swipes/s
+  Resort  4: 49982 swipes, 494 swipes/s
+  Resort  5: 50436 swipes, 499 swipes/s
+  Resort  6: 49779 swipes, 492 swipes/s
+  Resort  7: 50048 swipes, 495 swipes/s
+  Resort  8: 49897 swipes, 493 swipes/s
+  Resort  9: 50168 swipes, 496 swipes/s
+  Resort 10: 50092 swipes, 495 swipes/s
+Push latency (n=1353): mean=9.11, median=4, p95=32, p99=118, min=1, max=399 (ms)
+Total leaderboard updates delivered: 1353
+Note: push latency includes clock skew between client and server clocks.
+```
+
+### alb2-500k (`results/alb2-500k-output.txt`)
+
+```
+===== Ingest Path =====
+Successful swipes:   500000
+Failed swipes:       0
+Retries:             0
+Connection errors:   0
+Warmup:  32 threads, 11317 ms, 2828 swipes/s
+Main:    256 threads, 74474 ms, 6284 swipes/s
+Total wall time: 85791 ms
+Overall throughput: 5828 swipes/s
+HTTP connections: 1 shared HttpClient for ingest (HTTP/1.1 keep-alive pool), 1 separate HttpClient for WebSockets
+
+===== Subscribe Path =====
+Resort  1: 135 updates, connect 31 ms, 0 reconnections
+Resort  2: 153 updates, connect 33 ms, 0 reconnections
+Resort  3: 125 updates, connect 7 ms, 0 reconnections
+Resort  4: 127 updates, connect 7 ms, 0 reconnections
+Resort  5: 130 updates, connect 11 ms, 0 reconnections
+Resort  6: 137 updates, connect 6 ms, 0 reconnections
+Resort  7: 133 updates, connect 11 ms, 0 reconnections
+Resort  8: 153 updates, connect 6 ms, 0 reconnections
+Resort  9: 127 updates, connect 8 ms, 0 reconnections
+Resort 10: 130 updates, connect 7 ms, 0 reconnections
+
+===== Performance Analysis =====
+Ingest latency (n=500000): mean=38.47, median=37, p95=66, p99=99, min=4, max=455 (ms)
+Throughput per resort:
+  Resort  1: 49981 swipes, 583 swipes/s
+  Resort  2: 49848 swipes, 581 swipes/s
+  Resort  3: 49759 swipes, 580 swipes/s
+  Resort  4: 49848 swipes, 581 swipes/s
+  Resort  5: 49984 swipes, 583 swipes/s
+  Resort  6: 50062 swipes, 584 swipes/s
+  Resort  7: 50255 swipes, 586 swipes/s
+  Resort  8: 50548 swipes, 589 swipes/s
+  Resort  9: 49664 swipes, 579 swipes/s
+  Resort 10: 50051 swipes, 583 swipes/s
+Push latency (n=1350): mean=10.73, median=9, p95=21, p99=56, min=1, max=340 (ms)
+Total leaderboard updates delivered: 1350
+Note: push latency includes clock skew between client and server clocks.
+```
+
+### alb4-500k (`results/alb4-500k-output.txt`)
+
+```
+===== Ingest Path =====
+Successful swipes:   500000
+Failed swipes:       0
+Retries:             0
+Connection errors:   0
+Warmup:  32 threads, 11320 ms, 2827 swipes/s
+Main:    256 threads, 74832 ms, 6254 swipes/s
+Total wall time: 86152 ms
+Overall throughput: 5804 swipes/s
+HTTP connections: 1 shared HttpClient for ingest (HTTP/1.1 keep-alive pool), 1 separate HttpClient for WebSockets
+
+===== Subscribe Path =====
+Resort  1: 131 updates, connect 34 ms, 0 reconnections
+Resort  2: 139 updates, connect 34 ms, 0 reconnections
+Resort  3: 130 updates, connect 36 ms, 0 reconnections
+Resort  4: 125 updates, connect 13 ms, 0 reconnections
+Resort  5: 129 updates, connect 40 ms, 0 reconnections
+Resort  6: 120 updates, connect 17 ms, 0 reconnections
+Resort  7: 129 updates, connect 7 ms, 0 reconnections
+Resort  8: 144 updates, connect 7 ms, 0 reconnections
+Resort  9: 128 updates, connect 12 ms, 0 reconnections
+Resort 10: 125 updates, connect 8 ms, 0 reconnections
+
+===== Performance Analysis =====
+Ingest latency (n=500000): mean=38.69, median=37, p95=63, p99=87, min=4, max=251 (ms)
+Throughput per resort:
+  Resort  1: 50373 swipes, 585 swipes/s
+  Resort  2: 50107 swipes, 582 swipes/s
+  Resort  3: 49793 swipes, 578 swipes/s
+  Resort  4: 49820 swipes, 578 swipes/s
+  Resort  5: 50111 swipes, 582 swipes/s
+  Resort  6: 49958 swipes, 580 swipes/s
+  Resort  7: 49970 swipes, 580 swipes/s
+  Resort  8: 50123 swipes, 582 swipes/s
+  Resort  9: 49981 swipes, 580 swipes/s
+  Resort 10: 49764 swipes, 578 swipes/s
+Push latency (n=1300): mean=13.95, median=12, p95=25, p99=70, min=1, max=483 (ms)
+Total leaderboard updates delivered: 1300
+Note: push latency includes clock skew between client and server clocks.
+```
