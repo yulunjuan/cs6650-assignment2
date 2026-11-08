@@ -43,3 +43,9 @@ notes/
 ### Build byproducts ###
 dependency-reduced-pom.xml
 __pycache__/
+
+### Local only (not part of the submission) ###
+DESIGN_NOTES_zh.md
+MANUAL_STEPS_zh.md
+*Submission*.pdf
+results/*-latency.csv

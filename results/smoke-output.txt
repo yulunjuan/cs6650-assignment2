@@ -2,7 +2,7 @@ Smoke test — 2026-11-08
 Setup: 1 x server-v2 (t3.small, 100.23.100.251) -> RabbitMQ (t3.small) -> 1 x consumer (t3.small)
 Client: laptop (Windows), outside AWS, 64 main-phase threads, 50,000 swipes
 Command: java -jar target/client.jar http://$SERVER1:8080/ski-servlet 64 50000 smoke
-CSV: smoke-latency.csv, smoke-throughput.csv
+CSV: smoke-throughput.csv
 
 ==================== Client output ====================
 Server: http://100.23.100.251:8080/ski-servlet, main phase threads: 64, total swipes: 50000, run label: smoke

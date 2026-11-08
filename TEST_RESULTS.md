@@ -60,7 +60,7 @@ each resort received about 10% of the swipes.
 | alb4-t512 | 73.23 / 73 / 128 / 179 / 719 | 18 / 42 / 339,863 | 298 | 57,058/s |
 | alb4-t512b | 74.27 / 73 / 130 / 178 / 965 | 11 / 28 / 71 | 1,319 | 62,002/s |
 
-Full outputs and CSVs are in `results/<label>-output.txt`, `-latency.csv` and `-throughput.csv`.
+Full client outputs are in `results/<label>-output.txt`, and 10-second throughput buckets are in `results/<label>-throughput.csv`.
 
 ## 3. Real leaderboard evidence
 
