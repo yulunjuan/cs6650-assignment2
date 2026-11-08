@@ -287,12 +287,3 @@ changes the A1 API.
   so a 2 GB heap risked an OOM kill.
 - The client runs on a separate EC2 instance. The `results/` folder must be created on that instance before `tee`.
 - The consumer was restarted before each run so that aggregates and the dedupe set do not carry over between runs.
-
-## 9. Not completed
-
-- Consumer thread sweep (10/20/40/80): not run. By design, one consumer per resort queue caps effective
-  parallelism at 10, and the measured bottleneck is the broker, so more consumer threads are not expected to help.
-- Client thread sweep: only 256 and 512 were run. 64 and 128 were not run on EC2; 64 was used only in the laptop
-  smoke test.
-- Failover test (stopping a server mid-run) and broker-restart reconnection test: not run.
-- Batch-ack and async-confirm tuning: not tried.
