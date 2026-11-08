@@ -107,8 +107,8 @@ Depth fluctuated between roughly 60 and 180 with no upward trend, which is a sta
 ![alb4-500k last minute](results/screenshots/alb4-500k_last_minute.png)
 *RabbitMQ overview, last minute, end of the alb4-500k run (4 instances, 256 client threads).*
 
-**All load-balanced runs** (Overview, last hour, local UTC−6): peaks at 11:01 alb2 (queue approx. 260, the highest of
-all runs), 11:16 alb4-500k (approx. 100), 11:22 alb4-1m (the widest), 11:29 alb4-t512 and 11:34 alb4-t512b (approx. 150).
+**All load-balanced runs** (Overview, last hour, local UTC−6): peaks at 11:01 alb2 (queue approx. 260, the highest point on this graph; hourly
+averaging smooths the 1M run's measured peak of 265), 11:16 alb4-500k (approx. 100), 11:22 alb4-1m (the widest), 11:29 alb4-t512 and 11:34 alb4-t512b (approx. 150).
 The queue returned to 0 after every run. At the one-hour scale each point averages a time window, so plateaus look
 like spikes and rates look lower than the per-run measurements.
 
@@ -138,7 +138,7 @@ run ending 2026-11-08T18:20:08+0000: processed=500100 maxLag=57ms maxThreads=2 d
 
 | Segment | Client successful swipes | Consumer processed | Max 5 s avg lag | Duplicates |
 |---|---|---|---|---|
-| smoke | 50,000 | 50,100 | 2–4 ms (live log, see note) | 0 |
+| smoke | 50,000 | 50,100 | not saved (2–4 ms at start) | 0 |
 | single-500k | 500,000 | 500,100 | 43 ms | 0 |
 | alb2-500k | 500,000 | 500,100 | 33 ms | 0 |
 | alb4-500k | 500,000 | 500,100 | 23 ms | 0 |
@@ -154,15 +154,15 @@ server stores these like any other swipe, but they are not counted in the client
 restart matches too: 1,500,200 = 1,000,100 + 500,100. Duplicates were 0 in every run, so no swipe was counted twice.
 
 **Consumer lag < 100 ms.** The highest 5-second average lag across all runs was 62 ms. The smoke segment reports 0 ms
-because the saved journal starts at 16:30, after the smoke run ended (16:14). During the smoke run, the live log showed
-avgLag 2–4 ms (`results/smoke-output.txt`).
+because the saved journal starts at 16:30, after the smoke run ended (16:14). The consumer log for the smoke run was not
+saved; the only lines I captured, at the very start of that run, showed avgLag 2–4 ms.
 
 **Dynamic scaling.** The pool stayed at its minimum of 2 threads in every run, and 2 threads kept up with ~6k msg/s.
 That is consistent with the broker, not the consumer, being the bottleneck (§8). The scaler doubles the pool when the
 depth it reads exceeds 500. It reads depth with `messageCount`, which counts only ready messages. With prefetch 100
 on each of the 10 channels, queued messages were already delivered to the consumer and held as unacked, so the ready
 count in the log stayed at 0 throughout. The RabbitMQ UI confirms this split: Ready 0 and Unacked 85 in
-`RabbitMQ_last_hour_1.png`. Even total depth (peak 265) stayed below the 500 threshold.
+the last-hour screenshot captured at 11:18 (§4). Even total depth (peak 265) stayed below the 500 threshold.
 
 ## 6. Load distribution and stickiness
 
