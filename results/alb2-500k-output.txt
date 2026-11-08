@@ -1,0 +1,57 @@
+Server: http://skitrak-alb-1426682449.us-west-2.elb.amazonaws.com/ski-servlet, main phase threads: 256, total swipes: 500000, run label: alb2-500k
+Single-thread avg RTT: 9.68 ms
+Little's Law prediction: warmup (32 threads) = 3307 req/s, main (256 threads) = 26457 req/s
+
+===== Ingest Path =====
+Successful swipes:   500000
+Failed swipes:       0
+Retries:             0
+Connection errors:   0
+Warmup:  32 threads, 11317 ms, 2828 swipes/s
+Main:    256 threads, 74474 ms, 6284 swipes/s
+Total wall time: 85791 ms
+Overall throughput: 5828 swipes/s
+HTTP connections: 1 shared HttpClient for ingest (HTTP/1.1 keep-alive pool), 1 separate HttpClient for WebSockets
+
+===== Subscribe Path =====
+Resort  1: 135 updates, connect 31 ms, 0 reconnections
+Resort  2: 153 updates, connect 33 ms, 0 reconnections
+Resort  3: 125 updates, connect 7 ms, 0 reconnections
+Resort  4: 127 updates, connect 7 ms, 0 reconnections
+Resort  5: 130 updates, connect 11 ms, 0 reconnections
+Resort  6: 137 updates, connect 6 ms, 0 reconnections
+Resort  7: 133 updates, connect 11 ms, 0 reconnections
+Resort  8: 153 updates, connect 6 ms, 0 reconnections
+Resort  9: 127 updates, connect 8 ms, 0 reconnections
+Resort 10: 130 updates, connect 7 ms, 0 reconnections
+
+===== Last Leaderboard Received =====
+Resort  1: {"resortID":"1","dayID":"1","serverTimestamp":"2026-11-08T17:01:52.007487788Z","top":[{"rank":1,"skierID":"78116","vertical":1651},{"rank":2,"skierID":"88925","vertical":1538},{"rank":3,"skierID":"72287","vertical":1398},{"rank":4,"skierID":"85087","vertical":1398},{"rank":5,"skierID":"83239","vertical":1391},{"rank":6,"skierID":"75737","vertical":1347},{"rank":7,"skierID":"23053","vertical":1346},{"rank":8,"skierID":"8721","vertical":1338},{"rank":9,"skierID":"261","vertical":1320},{"rank":10,"skierID":"71232","vertical":1304}]}
+Resort  2: {"resortID":"2","dayID":"1","serverTimestamp":"2026-11-08T17:01:53.919691143Z","top":[{"rank":1,"skierID":"56576","vertical":1668},{"rank":2,"skierID":"88622","vertical":1565},{"rank":3,"skierID":"12700","vertical":1511},{"rank":4,"skierID":"98720","vertical":1452},{"rank":5,"skierID":"50469","vertical":1451},{"rank":6,"skierID":"28070","vertical":1442},{"rank":7,"skierID":"31601","vertical":1400},{"rank":8,"skierID":"32476","vertical":1374},{"rank":9,"skierID":"43745","vertical":1339},{"rank":10,"skierID":"30449","vertical":1338}]}
+Resort  3: {"resortID":"3","dayID":"1","serverTimestamp":"2026-11-08T17:01:53.237751932Z","top":[{"rank":1,"skierID":"54682","vertical":1695},{"rank":2,"skierID":"86487","vertical":1434},{"rank":3,"skierID":"81056","vertical":1416},{"rank":4,"skierID":"7819","vertical":1408},{"rank":5,"skierID":"63847","vertical":1406},{"rank":6,"skierID":"12888","vertical":1405},{"rank":7,"skierID":"28288","vertical":1373},{"rank":8,"skierID":"52949","vertical":1357},{"rank":9,"skierID":"10225","vertical":1356},{"rank":10,"skierID":"30014","vertical":1339}]}
+Resort  4: {"resortID":"4","dayID":"1","serverTimestamp":"2026-11-08T17:01:52.918967354Z","top":[{"rank":1,"skierID":"72316","vertical":1424},{"rank":2,"skierID":"60500","vertical":1390},{"rank":3,"skierID":"78042","vertical":1390},{"rank":4,"skierID":"45702","vertical":1381},{"rank":5,"skierID":"19732","vertical":1321},{"rank":6,"skierID":"26558","vertical":1313},{"rank":7,"skierID":"38621","vertical":1286},{"rank":8,"skierID":"25367","vertical":1260},{"rank":9,"skierID":"46480","vertical":1259},{"rank":10,"skierID":"45725","vertical":1258}]}
+Resort  5: {"resortID":"5","dayID":"1","serverTimestamp":"2026-11-08T17:01:50.455286049Z","top":[{"rank":1,"skierID":"56146","vertical":1615},{"rank":2,"skierID":"36832","vertical":1399},{"rank":3,"skierID":"43873","vertical":1382},{"rank":4,"skierID":"68971","vertical":1347},{"rank":5,"skierID":"35804","vertical":1311},{"rank":6,"skierID":"75455","vertical":1277},{"rank":7,"skierID":"93524","vertical":1277},{"rank":8,"skierID":"5413","vertical":1269},{"rank":9,"skierID":"78886","vertical":1269},{"rank":10,"skierID":"21533","vertical":1251}]}
+Resort  6: {"resortID":"6","dayID":"1","serverTimestamp":"2026-11-08T17:01:53.435849462Z","top":[{"rank":1,"skierID":"42794","vertical":1676},{"rank":2,"skierID":"69395","vertical":1520},{"rank":3,"skierID":"74904","vertical":1416},{"rank":4,"skierID":"21378","vertical":1381},{"rank":5,"skierID":"32127","vertical":1357},{"rank":6,"skierID":"34925","vertical":1347},{"rank":7,"skierID":"55087","vertical":1345},{"rank":8,"skierID":"92191","vertical":1320},{"rank":9,"skierID":"40155","vertical":1313},{"rank":10,"skierID":"76398","vertical":1312}]}
+Resort  7: {"resortID":"7","dayID":"1","serverTimestamp":"2026-11-08T17:01:49.545267912Z","top":[{"rank":1,"skierID":"84844","vertical":1747},{"rank":2,"skierID":"16027","vertical":1616},{"rank":3,"skierID":"17592","vertical":1540},{"rank":4,"skierID":"50690","vertical":1479},{"rank":5,"skierID":"48669","vertical":1459},{"rank":6,"skierID":"31093","vertical":1416},{"rank":7,"skierID":"31189","vertical":1409},{"rank":8,"skierID":"63752","vertical":1408},{"rank":9,"skierID":"59971","vertical":1372},{"rank":10,"skierID":"62581","vertical":1329}]}
+Resort  8: {"resortID":"8","dayID":"1","serverTimestamp":"2026-11-08T17:01:53.722529009Z","top":[{"rank":1,"skierID":"82529","vertical":1599},{"rank":2,"skierID":"29622","vertical":1477},{"rank":3,"skierID":"3655","vertical":1408},{"rank":4,"skierID":"70829","vertical":1391},{"rank":5,"skierID":"55013","vertical":1373},{"rank":6,"skierID":"66808","vertical":1372},{"rank":7,"skierID":"35564","vertical":1365},{"rank":8,"skierID":"83299","vertical":1365},{"rank":9,"skierID":"47370","vertical":1330},{"rank":10,"skierID":"8448","vertical":1330}]}
+Resort  9: {"resortID":"9","dayID":"1","serverTimestamp":"2026-11-08T17:01:47.926489169Z","top":[{"rank":1,"skierID":"4297","vertical":1607},{"rank":2,"skierID":"62300","vertical":1581},{"rank":3,"skierID":"72366","vertical":1512},{"rank":4,"skierID":"82917","vertical":1503},{"rank":5,"skierID":"85995","vertical":1452},{"rank":6,"skierID":"37648","vertical":1415},{"rank":7,"skierID":"51913","vertical":1363},{"rank":8,"skierID":"34115","vertical":1356},{"rank":9,"skierID":"89700","vertical":1321},{"rank":10,"skierID":"29437","vertical":1304}]}
+Resort 10: {"resortID":"10","dayID":"1","serverTimestamp":"2026-11-08T17:01:49.400299805Z","top":[{"rank":1,"skierID":"74695","vertical":1555},{"rank":2,"skierID":"71002","vertical":1486},{"rank":3,"skierID":"83903","vertical":1477},{"rank":4,"skierID":"1886","vertical":1425},{"rank":5,"skierID":"10310","vertical":1424},{"rank":6,"skierID":"70372","vertical":1416},{"rank":7,"skierID":"12425","vertical":1415},{"rank":8,"skierID":"62181","vertical":1399},{"rank":9,"skierID":"42752","vertical":1390},{"rank":10,"skierID":"13986","vertical":1330}]}
+
+===== Performance Analysis =====
+Ingest latency (n=500000): mean=38.47, median=37, p95=66, p99=99, min=4, max=455 (ms)
+Throughput per resort:
+  Resort  1: 49981 swipes, 583 swipes/s
+  Resort  2: 49848 swipes, 581 swipes/s
+  Resort  3: 49759 swipes, 580 swipes/s
+  Resort  4: 49848 swipes, 581 swipes/s
+  Resort  5: 49984 swipes, 583 swipes/s
+  Resort  6: 50062 swipes, 584 swipes/s
+  Resort  7: 50255 swipes, 586 swipes/s
+  Resort  8: 50548 swipes, 589 swipes/s
+  Resort  9: 49664 swipes, 579 swipes/s
+  Resort 10: 50051 swipes, 583 swipes/s
+Push latency (n=1350): mean=10.73, median=9, p95=21, p99=56, min=1, max=340 (ms)
+Total leaderboard updates delivered: 1350
+Note: push latency includes clock skew between client and server clocks.
+
+CSV files written to /home/ec2-user/results

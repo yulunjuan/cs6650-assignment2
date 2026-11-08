@@ -1,40 +1,75 @@
 # AI Usage Reflection — Assignment 2
 
-> DRAFT. The factual log (section 1) was drafted by the AI assistant from the session itself.
-> Sections marked TODO must be written by me. They are about my own judgment, and the rubric
-> grades honesty and insight. Delete this note before submitting.
-
 ## 1. Where and for what I used AI
 
-Tool: Claude Code (Claude Opus 5.5) in VS Code.
+I used two AI tools in different roles:
 
-| Area | What the AI did |
-|---|---|
-| Spec intake | Saved the spec and my working rules (minimal v1, English comments, Chinese design notes, no push) |
-| `server-v2` | Wrote `ChannelPool` (borrow/return, lazy channel replacement, reconnect with 1 s backoff), `SwipePublisher` (publisher confirms), `Topology`, lift-vertical lookup, rewritten `SkierServlet`, `BackplaneListener`, real `LeaderboardEndpoint`, `AppLifecycle` |
-| `consumer` | Wrote the whole app: per-resort channels, resizable thread pool, `Aggregator`/`TopN`, eventId dedupe, retry → dead-letter, load monitor with depth-based scaling, health endpoint, shutdown hook |
-| Connection locality | Proposed the RabbitMQ fanout backplane and argued against co-location |
-| Deployment / monitoring | RabbitMQ Docker install, Tomcat `setenv.sh`, deploy scripts, systemd unit + health-check cron, ALB AWS CLI script, queue/system monitor scripts |
-| Client | Added total-swipes / run-label arguments, a drain wait, and printing the last leaderboard per resort |
-| Docs | `ARCHITECTURE.md` and a Chinese design-notes document (26 decisions with alternatives) |
-| Starter repo | Searched the course repo and its full history for the lift → vertical table. It is not there, so the table is an even 60–400 ft spread |
+- **Claude (chat)** to learn and discuss the design: Week 5–8 concepts (backplane vs. co-location,
+  ack modes, idempotency, ALB health checks and sticky sessions), to walk through the AWS
+  deployment step by step, and to interpret test results.
+- **Claude Code (Claude Opus 5.5)** to generate the code once the design was settled.
 
-Transcript: TODO — export the chat into `transcripts/` or add a share link.
+My workflow:
+1. Discussed the architecture with the AI until I understood each choice and its tradeoff.
+2. Asked Claude Code to generate the code for each area (`server-v2`, `consumer`, deployment and
+   monitoring scripts, small client changes).
+3. Reviewed the structure of the generated code against the spec: class responsibilities, where
+   state lives, ack placement, channel borrow/return.
+4. Did the AWS work myself: security groups, the RabbitMQ / consumer / server / client instances,
+   the AMI from my A1 server, the ALB and target group, deployment, and every test run.
+5. Cross-checked Claude Code's deployment instructions in the chat session before running them.
+   Several of the corrections below came from that cross-check.
 
-## 2. Suggestions I accepted (at least two) — and why
+| Area | AI contribution | My part |
+|---|---|---|
+| Architecture | Explained options and tradeoffs | Chose the design after the discussion |
+| `server-v2`, `consumer` | Generated the code | Reviewed structure against the spec |
+| Deployment scripts | Generated the scripts | Ran them on EC2, fixed issues found there |
+| AWS setup | Gave step-by-step guidance | Did all console work and verification |
+| Performance analysis | Helped interpret numbers | Ran the tests, collected metrics, decided which experiments to run |
 
-TODO (my own words). Candidates to evaluate, not conclusions:
-- Backplane over co-location (ARCHITECTURE §4): do I agree with the tradeoff?
-- `x-overflow reject-publish` instead of the default drop-head, so a full queue never loses a swipe that already got a 201.
-- Synchronous publisher confirms for "no swipe loss", at a throughput cost.
+## 2. Suggestions I accepted — and why
 
-## 3. Suggestions I rejected or had to correct (at least two) — and why
+- **Broadcast backplane instead of co-location.** A WebSocket lives on whichever server the ALB
+  picked, but the consumer that computes the standings runs elsewhere. A fanout exchange delivers
+  every update to every server, so it works with any ALB distribution. I accepted the cost: each
+  update is copied to all N servers, which is fine at N ≤ 4.
+- **Publisher confirms + `reject-publish`.** A 201 should mean the swipe is really in the queue.
+  With the default `drop-head`, a full queue would silently drop swipes that were already
+  acknowledged. I accepted the throughput cost of synchronous confirms, and my tests later showed
+  this cost lands on the broker.
+- **One consumer per resort queue.** This keeps per-resort ordering, as the spec requires. I
+  accepted it knowing it caps useful consumer parallelism at 10 (one per resort).
 
-TODO. Fill in from what actually happened during review, deployment and tuning
-(e.g. a setting changed after measurement, a bug found on EC2, a default I overrode).
+## 3. Suggestions I corrected — and why
 
-## 4. Something the AI got wrong, or a decision I reasoned through myself
+- **Consumer heap.** The generated systemd unit used `-Xmx2g`, but the consumer runs on a t3.small
+  with 2 GB total. The JVM could grow past what the OS can give it and be OOM-killed. I changed it
+  to `-Xmx1200m` before deploying.
+- **Load-test procedure.** The suggested command piped output with `tee` into a `results/` folder
+  that does not exist on a fresh client instance, so the output would be lost. I also noticed the
+  consumer keeps its aggregates and eventId set in memory across runs, so earlier test data would
+  mix into later leaderboards and memory would keep growing. I created the folder first and
+  restarted the consumer before each run.
+- **Where to run the client.** My first smoke test from my laptop reached only 157 swipes/s. The
+  consumer was idle and queue depth stayed at 0, so the system was not the limit: the 142 ms
+  laptop-to-Oregon RTT was. I moved the load client onto an EC2 instance in the same region for
+  all performance runs.
 
-TODO. Possible topics: whether 20/40/80 consumer threads can help when each resort queue has exactly one
-consumer (measured result?); whether dedupe should mark the eventId before or after the state update;
-the claim that the lift table was in the starter repo when it was not.
+## 4. Decisions I reasoned through myself
+
+- **Finding the real bottleneck.** Going from 2 to 4 servers did not raise throughput (~6,250/s)
+  and latency stayed at ~38 ms, so the servers were no longer the limit. Instead of assuming the
+  cause, I ran a 512-thread test while watching `vmstat` on both the broker and the client. Throughput
+  rose only 3% while latency doubled, the broker sat at 95–99% CPU, and the client still had ~20%
+  idle. That pointed to the single RabbitMQ broker, not the client.
+- **A 340 s push-latency p99.** One 512-thread run showed push-latency p99 of ~340 s. I had not
+  restarted the consumer before that run (the command failed silently), and while working through
+  it in the chat session I traced the number to the server's cached leaderboard snapshot that is
+  sent to each new subscriber: it came from the previous run, so its timestamp was minutes old. I
+  confirmed this by re-running with a restarted consumer, and p99 dropped to 71 ms. This showed me
+  that the push-latency metric should exclude each subscriber's first message.
+- **Limit of eventId dedupe.** The eventId is generated by the server. It catches broker
+  redeliveries, but if a 201 is lost and the client retries the POST, the server creates a new
+  eventId and the swipe is counted twice. Fixing this needs a client-generated ID, which changes
+  the A1 API, so I kept the spec's design and documented the limitation.
