@@ -21,7 +21,7 @@ All instances are in AWS us-west-2. Times are UTC unless noted; the RabbitMQ UI 
 - Startup checks: each server logged `server-v2 <host> connected to RabbitMQ, channel pool size 64`.
   The consumer health check returned `{"status":"UP","swipesProcessed":0,"queueDepth":0}`.
 - Procedure: before each run I restarted the consumer (`systemctl restart skitrak-consumer`) to clear the in-memory
-  aggregates and the eventId set. The exception is alb4-t512 (see §7).
+  aggregates and the eventId set. The exception is alb4-t512 (see §8).
 
 ![EC2 instances](results/screenshots/EC2_instances.png)
 *All SkiTrak instances running: 4 ingest servers, consumer and broker (t3.small), and the client (t3.large).*
@@ -120,7 +120,51 @@ like spikes and rates look lower than the per-run measurements.
 
 All runs stayed far below the 1,000-message depth target.
 
-## 5. Load distribution and stickiness
+## 5. Part 4 target metrics
+
+The consumer logs one line every 5 s (`processed`, `avgLag`, `queueDepth`, `threads`, `duplicates`). Its systemd
+journal from 16:30 UTC is saved in `results/consumer-journal.txt`. `results/summarize_consumer.awk` splits the
+journal at each consumer restart and reports the final counters of each segment:
+
+```
+$ awk -f results/summarize_consumer.awk results/consumer-journal.txt
+run ending 2026-11-08T16:34:17+0000: processed=50100 maxLag=0ms maxThreads=2 duplicates=0
+run ending 2026-11-08T17:00:23+0000: processed=500100 maxLag=43ms maxThreads=2 duplicates=0
+run ending 2026-11-08T17:16:15+0000: processed=500100 maxLag=33ms maxThreads=2 duplicates=0
+run ending 2026-11-08T17:21:56+0000: processed=500100 maxLag=23ms maxThreads=2 duplicates=0
+run ending 2026-11-08T17:33:45+0000: processed=1500200 maxLag=62ms maxThreads=2 duplicates=0
+run ending 2026-11-08T18:20:08+0000: processed=500100 maxLag=57ms maxThreads=2 duplicates=0
+```
+
+| Segment | Client successful swipes | Consumer processed | Max 5 s avg lag | Duplicates |
+|---|---|---|---|---|
+| smoke | 50,000 | 50,100 | 2–4 ms (live log, see note) | 0 |
+| single-500k | 500,000 | 500,100 | 43 ms | 0 |
+| alb2-500k | 500,000 | 500,100 | 33 ms | 0 |
+| alb4-500k | 500,000 | 500,100 | 23 ms | 0 |
+| alb4-1m + alb4-t512 (no restart between them) | 1,000,000 + 500,000 | 1,500,200 | 62 ms | 0 |
+| alb4-t512b | 500,000 | 500,100 | 57 ms | 0 |
+
+**Queue depth < 1,000.** The highest measured total depth (ready + unacked) was 265, in the 1M run (`queue_monitor.py`).
+The graphs show approx. 30–40 for single-500k and approx. 260 at most for the load-balanced runs (§4).
+
+**No swipe loss.** In every segment, consumer processed = client successful swipes + 100. Before warmup, the client
+measures single-thread RTT by sending `LITTLES_LAW_SAMPLES = 100` real swipes (`Main.measureSingleThreadRtt`). The
+server stores these like any other swipe, but they are not counted in the client's success total. The segment without a
+restart matches too: 1,500,200 = 1,000,100 + 500,100. Duplicates were 0 in every run, so no swipe was counted twice.
+
+**Consumer lag < 100 ms.** The highest 5-second average lag across all runs was 62 ms. The smoke segment reports 0 ms
+because the saved journal starts at 16:30, after the smoke run ended (16:14). During the smoke run, the live log showed
+avgLag 2–4 ms (`results/smoke-output.txt`).
+
+**Dynamic scaling.** The pool stayed at its minimum of 2 threads in every run, and 2 threads kept up with ~6k msg/s.
+That is consistent with the broker, not the consumer, being the bottleneck (§8). The scaler doubles the pool when the
+depth it reads exceeds 500. It reads depth with `messageCount`, which counts only ready messages. With prefetch 100
+on each of the 10 channels, queued messages were already delivered to the consumer and held as unacked, so the ready
+count in the log stayed at 0 throughout. The RabbitMQ UI confirms this split: Ready 0 and Unacked 85 in
+`RabbitMQ_last_hour_1.png`. Even total depth (peak 265) stayed below the 500 threshold.
+
+## 6. Load distribution and stickiness
 
 - **2-server run.** The Tomcat access log on server-2 counted **250,049** `POST /ski-servlet/skiers` requests, which is 50.01% of
   500,000. Server-1 therefore handled 249,951. Only the 2026-11-08 file is from this test; the older files came from the A1 AMI.
@@ -157,7 +201,7 @@ the smaller spikes after 17:15 are the 4-target runs. The metric is the average 
   Because of the backplane, every server receives every leaderboard update, so a subscriber is served correctly
   on any target.
 
-## 6. Resource utilization
+## 7. Resource utilization
 
 **vmstat on the RabbitMQ host** (5 s interval, run alb4-t512; consumer state does not affect ingest load):
 
@@ -229,7 +273,7 @@ The ingest server and the consumer stay low, while the broker carries the highes
 ![CPU consumer](results/screenshots/cpu_consumer.png)
 *skitrak-consumer CPU, 5-minute averages (peak 5-minute average 12.94%).*
 
-## 7. Analysis
+## 8. Analysis
 
 **Laptop smoke test.** From my laptop, single-thread RTT was 142 ms and the client measured 157 swipes/s overall. Little's
 Law predicted 225 req/s for the 32-thread warmup. Under load, though, median latency rose to ~250 ms, and
@@ -281,7 +325,7 @@ measurement should exclude each subscriber's first message.
 a client retry after a lost 201, because the retry gets a new eventId. Fixing this needs a client-generated ID, which
 changes the A1 API.
 
-## 8. Changes made during deployment
+## 9. Changes made during deployment
 
 - `deployment/consumer/skitrak-consumer.service`: `-Xmx2g` → `-Xmx1200m`. The consumer host (t3.small) has 2 GB of total RAM,
   so a 2 GB heap risked an OOM kill.
